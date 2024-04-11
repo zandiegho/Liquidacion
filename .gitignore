@@ -1,0 +1,11 @@
+# Ignorar archivos de respaldo creados por editores de texto
+*~
+
+# Ignorar archivos de compilación
+*.o
+*.out
+
+# Ignorar directorios específicos
+/build/
+/node_modules/
+php/curl_functions.php
