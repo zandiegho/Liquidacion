@@ -9,6 +9,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         
         // Llamas a la función en curl_functions.php para obtener los datos del cliente
         $datosClienteArray = ObtenerDatosCliente($docEmpleador);
+        $datosNominaArray = obtenerDatosNomina($docEmpleador);
 
         /* echo "<br/>";
         var_dump($datosClienteArray['data'][0]);
@@ -43,6 +44,28 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             // Manejar el caso en el que no se pudieron obtener los datos del cliente
             echo "No se pudieron obtener los datos del cliente.";
         }
+
+
+        //VERIFICAR SI LA DECODIFICAICON DE LOS CAMPOS ES CORRECTA
+        if($datosNominaArray){
+
+            //Tomamos los campos de nomina que necesitamos
+            $nominasEncontradas = $datosNominaArray -> {'Total records'};
+            
+            if($nominasEncontradas != 0){
+                $cantidadNominas =  $nominasEncontradas;
+            }else{
+                $cantidadNominas = 0;
+            }
+            
+        /*echo "<br/>";
+        var_dump($datosNominaArray['data']);
+        echo "<br/>";  */
+
+        }
+
+
+
     }
 
 
@@ -119,50 +142,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
     }//fin if response cliente Valido  
 */
-
-    //Validar Nomina si Existe
-    $curlNomina = curl_init();
-
-        curl_setopt_array($curlNomina, array(
-            CURLOPT_URL => 'https://crm.wolkvox.com/server/API/v2/custom/query.php',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS =>'{
-                "operation":"techcon",
-                "wolkvox-token":"7b74656368636f6e7d2d7b32303232303632343132323830357d",
-                "module":"Nomina",
-                "field":"ID Contacto",
-                "value": '.$docEmpleador.'
-            }',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Cookie: PHPSESSID=gmdot8iv0o2gk6p3nof7c4vn08'
-            ),
-        ));
-
-        $responseNomina = curl_exec($curlNomina);
-        
-        curl_close($curlNomina);
-        #echo $responseNomina;
-
-        # FIN VALIDACION NOMINA
-    
-        # CONVERTIR RESPUESTA DE NOMINA A JSON
-        $responseNominaJson = json_decode($responseNomina, false);
-        
-        # VALIDACION NOMINA CON 0 REGISTROS
-        $nominasEncontradas = $responseNominaJson -> {'Total records'} ;
-
-        if($nominasEncontradas != 0){
-            $cantidadNominas =  $nominasEncontradas;
-        }else{
-            $cantidadNominas = 0;
-        }
     
     ?>
 
