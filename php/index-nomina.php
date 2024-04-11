@@ -57,11 +57,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             }else{
                 $cantidadNominas = 0;
             }
-            
-        /*echo "<br/>";
-        var_dump($datosNominaArray['data']);
-        echo "<br/>";  */
-
         }
 
 
