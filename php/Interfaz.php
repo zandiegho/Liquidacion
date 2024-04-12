@@ -523,7 +523,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
 
                         <div class="col">
                             <input class="form-control form-control-sm" type="number" id="salarioDiario"
-                                value="<?php print_r($salarioDiario) ?>" aria-label="readonly input">
+                                value="<?php print_r($salarioDiario) ?>" >
                         </div>
 
 
@@ -533,7 +533,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
 
                         <div class="col">
                             <input class="form-control form-control-sm" type="text"
-                                value="<?php print_r($diasLaborados) ?>" aria-label="readonly input" readonly>
+                                value="<?php print_r($diasLaborados) ?>" >
                         </div>
 
 
