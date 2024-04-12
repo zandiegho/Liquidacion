@@ -11,12 +11,44 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         echo "Error en el documento recibido
         <br>Verifique nuevamente  para enviar los datos";
         exit();
+    }           
+
+    #VALIDAR CLIENTE
+    $datosClienteArray = ObtenerDatosCliente($cedula);
+    // Verificas si la decodificación fue exitosa y si el nombre del cliente está presente en los datos
+    if ($datosClienteArray) {
+            
+        // Array con los nombres de los campos que deseas obtener
+        $camposDeseados = array('No Incluye Auxilio de Tte', 'Frecuencia de Pago', 'namecontact', 'ID Contacto' , 'Condicion Laboral' ,'Tipo de Labor', 'Nombre Empleado', 'ID Empleado' );
+        
+        // Array para almacenar los valores obtenidos
+        $valoresCliente = array();
+        
+        // Iteras sobre cada campo deseado y obtienes su valor del array de datos del cliente
+        foreach ($camposDeseados as $campo) {
+            // Verificas si el campo existe en los datos del cliente y lo agregas al array de valores
+            if (isset($datosClienteArray['data'][0][$campo])) {
+                $valoresCliente[$campo] = $datosClienteArray['data'][0][$campo];
+            } else {
+                // Si el campo no existe, puedes asignar un valor predeterminado o dejarlo en blanco
+                $valoresCliente[$campo] = 'No disponible';
+            }
+        }
+        
+        // Ahora $valoresCliente contiene todos los valores que necesitas del cliente
+        // Puedes acceder a cada valor utilizando su nombre de campo como clave en el array
+        foreach ($valoresCliente as $campo => $valor) {
+            echo ucfirst($campo) . ": " . $valor . "<br>"; // ucfirst() para capitalizar el nombre del campo
+        }
+    } else {
+        // Manejar el caso en el que no se pudieron obtener los datos del cliente
+        echo "No se pudieron obtener los datos del cliente.";
     }
+        
+    #VALIDAR NOMINA
+    $curlNomina = curl_init();
     
-    #  ↓↓↓ CONSULTAR CLIENTE ↓↓↓
-    $curlCliente = curl_init();
-    
-    /* curl_setopt_array($curlCliente, array(
+    curl_setopt_array($curlNomina, array(
         CURLOPT_URL => 'https://crm.wolkvox.com/server/API/v2/custom/query.php',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
@@ -24,154 +56,79 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         CURLOPT_TIMEOUT => 0,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS =>'{
             "operation":"techcon",
             "wolkvox-token":"7b74656368636f6e7d2d7b32303232303632343132323830357d",
-            "module":"contacts",
+            "module":"Nomina",
             "field":"ID Contacto",
             "value": '.$cedula.'
         }',
         CURLOPT_HTTPHEADER => array(
             'Content-Type: application/json',
-            'Cookie: PHPSESSID=03jeh67ajirv2ha35og473ca8a'
+            'Cookie: PHPSESSID=gmdot8iv0o2gk6p3nof7c4vn08'
         ),
     ));
 
-    $responseCliente = curl_exec($curlCliente);
-
-    curl_close($curlCliente);
-    # echo $responseCliente; 
-
-    # FIN CONSULTA CLIENTE
-     */
-
-    //decodificar la respuesta del Curl CLIENTE en JSON
-    $responseClienteJson = json_decode($responseCliente, false);
-
-    # SI EL CLIENTE EXISTE
-    if($responseClienteJson -> msg == "1 records were are found"){
+    $responseNomina = curl_exec($curlNomina);
+    
+    curl_close($curlNomina);
+    #echo $responseNomina;
+    
+    # FIN VALIDACION NOMINA
+    
+    # CONVERTIR RESPUESTA DE NOMINA A JSON
+    $responseNominaJson =json_decode($responseNomina, false);
+    
+    # VALIDACION NOMINA CON 0 REGISTROS
+    if($responseNominaJson -> msg == "0 records were are found"){
         
-        //decodificamos el json en matriz con parametro true
-        $decode_jsonT = json_decode($responseCliente, true);
-        $data = $decode_jsonT['data'];
+        # LLEVAR A PRIMER CONTACTO HTML CON DATOS DE MODULO CONTACTO 
+        echo '<script type="text/javascript">'
+        , 'document.getElementById("nominaEncontrada").innerHTML = "No se Encontró Registro de nomina"'
+        , '</script>'
+        ;
+    }
+    
+    # FIN VALIDACION NOMINA CON 0 REGISTROS
+    
+    else{
+        # VALIDACION NOMINA CON 1 O MAS REGISTROS
+        $decode_jsonNomina = json_decode($responseNomina, true);
+        $dataNomina = $decode_jsonNomina["data"];
         
-        //Accedemos al array DATA 
-        foreach($data as $datos){
+        foreach ($dataNomina as $datosNomina) {        
             
-            # Capturamos Wolkbox_ID
-            $wolkvox_id         = $datos["wolkvox_id"];
-            
-            # DATOS EMPLEADOR
-            $nombreEmpleador    = $datos["namecontact"];
-            $tipoDocEmpleador   = $datos["Tipo ID Contacto"];
-            $nroDocEmpleador    = $datos["ID Contacto"];
-            
-            # DATOS EMPLEADO
-            $nombreEmpleadoContactos     = $datos["Nombre Empleado"];
-            $tipoDocEmpleado    = $datos["Tipo ID"];
-            $nroDocEmpleadoCon     = $datos["ID Empleado"];
-            $inicioContrato     = $datos["Fecha Inicio"];
-            
-            # AUX DE TTE
-            $bool_aux_tte       =$datos["No Incluye Auxilio de Tte"];       
-            
-            # DATOS NOMIMA
-            $frecuenciaPago     =$datos["Frecuencia de Pago"];
-            $tipoContrato       =$datos["Tipo de Contrato"];
-            $salarioDiario      =$datos["Salario por dia"]["value"];
-            $condicionLaboral   =$datos["Condicion Laboral"];
-        }
-         
-       
-        
-        
-        
-        #VALIDAR NOMINA
-        $curlNomina = curl_init();
-        
-        curl_setopt_array($curlNomina, array(
-            CURLOPT_URL => 'https://crm.wolkvox.com/server/API/v2/custom/query.php',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS =>'{
-                "operation":"techcon",
-                "wolkvox-token":"7b74656368636f6e7d2d7b32303232303632343132323830357d",
-                "module":"Nomina",
-                "field":"ID Contacto",
-                "value": '.$cedula.'
-            }',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Cookie: PHPSESSID=gmdot8iv0o2gk6p3nof7c4vn08'
-            ),
-        ));
+            $baseMinimo         = obtenerValorSeguro($datosNomina["Base Minimo"]);
+            $nombreEmpleadorNom = obtenerValorSeguro($datosNomina["Nombre contacto"]);
+            $nombreEmpleado     = obtenerValorSeguro($datosNomina["Nombre Empleado"]);
+            $tipoLabor          = obtenerValorSeguro($datosNomina["Tipo de Labor"]);
+            $periodoNomina      = obtenerValorSeguro($datosNomina["Periodo Nomina"]);
+            $pagoDiario         = obtenerValorSeguro($datosNomina["Salario por dia"]);
+            $diasLaborados      = obtenerValorSeguro($datosNomina["Dias Laborados"]);
+            $bonificacion       = obtenerValorSeguro($datosNomina["Bonificacion"]);
+            $bonoDiario         = obtenerValorSeguro($datosNomina["Bono Diario"]);
+            $deduccionPension   = obtenerValorSeguro($datosNomina["Deduccion Pension"]);
+            $deduccionSalud     = obtenerValorSeguro($datosNomina["Deduccion Salud"]);
+            $valorHorasExtr     = obtenerValorSeguro($datosNomina["Vlr Horas Extras"]);
+            $rutaArchivo        = obtenerValorSeguro($datosNomina["Archivo Liquidacion"]);
+            $totalAuxTte1       = obtenerValorSeguro($datosNomina["Aux Transporte"]);
+            $valorPrima         = obtenerValorSeguro($datosNomina["Vlr Prima"]);
+            $periodoQuincena    = obtenerValorSeguro($datosNomina["Quincena"]); 
+            $periodoNomina      = obtenerValorSeguro($datosNomina["Periodo Nomina"]);   
+            $totalDevengado     = obtenerValorSeguro($datosNomina["Total Devengado"]);
+            $pagoNeto           = obtenerValorSeguro($datosNomina["Neto a Pagar"]);
+            $wolkvox_id_nom     = obtenerValorSeguro($datosNomina["wolkvox_id"]);
 
-        $responseNomina = curl_exec($curlNomina);
-        
-        curl_close($curlNomina);
-        #echo $responseNomina;
-        
-        # FIN VALIDACION NOMINA
-        
-        # CONVERTIR RESPUESTA DE NOMINA A JSON
-        $responseNominaJson =json_decode($responseNomina, false);
-        
-        # VALIDACION NOMINA CON 0 REGISTROS
-        if($responseNominaJson -> msg == "0 records were are found"){
-            
-            # LLEVAR A PRIMER CONTACTO HTML CON DATOS DE MODULO CONTACTO 
-            echo '<script type="text/javascript">'
-            , 'document.getElementById("nominaEncontrada").innerHTML = "No se Encontró Registro de nomina"'
-            , '</script>'
-            ;
-        }
-        
-        # FIN VALIDACION NOMINA CON 0 REGISTROS
-        
-        else{
-            # VALIDACION NOMINA CON 1 O MAS REGISTROS
-            $decode_jsonNomina = json_decode($responseNomina, true);
-            $dataNomina = $decode_jsonNomina["data"];
-            
-            foreach ($dataNomina as $datosNomina) {        
-                
-                $baseMinimo         = obtenerValorSeguro($datosNomina["Base Minimo"]);
-                $nombreEmpleadorNom = obtenerValorSeguro($datosNomina["Nombre contacto"]);
-                $nombreEmpleado     = obtenerValorSeguro($datosNomina["Nombre Empleado"]);
-                $tipoLabor          = obtenerValorSeguro($datosNomina["Tipo de Labor"]);
-                $periodoNomina      = obtenerValorSeguro($datosNomina["Periodo Nomina"]);
-                $pagoDiario         = obtenerValorSeguro($datosNomina["Salario por dia"]);
-                $diasLaborados      = obtenerValorSeguro($datosNomina["Dias Laborados"]);
-                $bonificacion       = obtenerValorSeguro($datosNomina["Bonificacion"]);
-                $bonoDiario         = obtenerValorSeguro($datosNomina["Bono Diario"]);
-                $deduccionPension   = obtenerValorSeguro($datosNomina["Deduccion Pension"]);
-                $deduccionSalud     = obtenerValorSeguro($datosNomina["Deduccion Salud"]);
-                $valorHorasExtr     = obtenerValorSeguro($datosNomina["Vlr Horas Extras"]);
-                $rutaArchivo        = obtenerValorSeguro($datosNomina["Archivo Liquidacion"]);
-                $totalAuxTte1       = obtenerValorSeguro($datosNomina["Aux Transporte"]);
-                $valorPrima         = obtenerValorSeguro($datosNomina["Vlr Prima"]);
-                $periodoQuincena    = obtenerValorSeguro($datosNomina["Quincena"]); 
-                $periodoNomina      = obtenerValorSeguro($datosNomina["Periodo Nomina"]);   
-                $totalDevengado     = obtenerValorSeguro($datosNomina["Total Devengado"]);
-                $pagoNeto           = obtenerValorSeguro($datosNomina["Neto a Pagar"]);
-                $wolkvox_id_nom     = obtenerValorSeguro($datosNomina["wolkvox_id"]);
+            $idNomina = $datosNomina["Nombre contacto"]["value_id"];
 
-                $idNomina = $datosNomina["Nombre contacto"]["value_id"];
-
-                
-                
-                // Imprimir resultados para verificar
-                #echo "Salario por dia: " . $pagoDiario . "<br/>";                                               
-                if($wolkvox_id != NULL){
-                    //DETENER FOREACH
-                    break;
-                }
+            
+            
+            // Imprimir resultados para verificar
+            #echo "Salario por dia: " . $pagoDiario . "<br/>";                                               
+            if($wolkvox_id_nom != NULL){
+                //DETENER FOREACH
+                break;
             }
         }
     }
@@ -181,21 +138,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     exit();
 }
 
+
 validarDosUltimos($responseNomina);
 
 
  # INICIALIZACIÓN DE VARIABLES
-        
-        #si el auxilio de transporte llega como false se inicializa en 0
-        if ($bool_aux_tte == true ){
-            $auxTte = 0;
-        }else{
-            $auxTte = $totalAuxTte1;
-        }
-        
-        if ($frecuenciaPago == "Mensual" ){
-            $desprendibleNomina = "Mensual";
-        }
+    $frecuenciaPago = $valoresCliente["Frecuencia de Pago"];
+    $bool_aux_tte = $valoresCliente["No Incluye Auxilio de Tte"];
+    echo "incluye Auxilio de Tte: " .$bool_aux_tte. "<br/>";
+    
+    #si el auxilio de transporte llega como false se inicializa en 0
+    if ($bool_aux_tte == true ){
+        $auxTte = 0;
+    }else{
+        $auxTte = $totalAuxTte1;
+    }
+    
+    if ($frecuenciaPago == "Mensual" ){
+        $desprendibleNomina = "Mensual";
+    }
+    
+    echo "Auxilio de Tte: " .$auxTte. "<br/>";
 
 
 /* ------------------------FUNCIONES PHP------------------------------- */
@@ -345,12 +308,12 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         <h2>Empleador</h2>
                         <div class="col">
                             <h5>Nombre Empleador</h5>
-                            <span id="Nombre_Empleador"><?php print_r($nombreEmpleador) ?></span>
+                            <span id="Nombre_Empleador"><?php print_r($valoresCliente["namecontact"]) ?></span>
                         </div><!-- Fin Col -->
 
                         <div class="col">
                             <h5>ID Empleador</h5>
-                            <span id="Id_Empleador"><?php print_r($nroDocEmpleador)  ?></span>
+                            <span id="Id_Empleador"><?php print_r($valoresCliente["ID Contacto"])  ?></span>
                         </div><!-- Fin Col -->
                     </div><!-- Fin Row -->
                 </div><!-- Fin Empelador -->
@@ -362,19 +325,19 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         <h2>Empleado</h2>
                         <div class="col">
                             <h5>Nombre Empleado</h5>
-                            <span id="Nombre_Empleado"><?php print_r($nombreEmpleadoContactos) ?></span>
+                            <span id="Nombre_Empleado"><?php print_r($valoresCliente["Nombre Empleado"]) ?></span>
                         </div>
                         <div class="col">
                             <h5>Id Empleado</h5>
-                            <span id="ID_Empleado"><?php print_r($nroDocEmpleadoCon) ?></span>
+                            <span id="ID_Empleado"><?php print_r($valoresCliente["ID Empleado"]) ?></span>
                         </div>
                         <div class="col">
-                            <h5>Tipo Contrato</h5>
-                            <span id="Tipo_Contrato"><?php print_r($tipoContrato) ?></span>
+                            <h5>Condicion Laboral</h5>
+                            <span id="Tipo_Contrato"><?php print_r($valoresCliente["Condicion Laboral"]) ?></span>
                         </div>
                         <div class="col">
-                            <h5>Condición Laboral</h5>
-                            <span id="Condicion_Laboral"><?php print_r($condicionLaboral) ?></span>
+                            <h5>Tipo de Labor</h5>
+                            <span id="Condicion_Laboral"><?php print_r($valoresCliente["Tipo de Labor"]) ?></span>
                         </div>
                     </div><!-- Fin Row Empleado -->
                 </div><!-- FIn Empleado -->
@@ -387,9 +350,8 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         <div class="col">
                             <p>
                                 <?php echo $periodoQuincenaActual  . " " .  $periodoNominaActual ?>,
-                                <br><br>
-
-                                <br><br>
+                                
+                                <br><br><br>
 
                                 <div class="row">
                                     <div class="col col-sm-4"> <span>PagoDiario</span> </div>
@@ -458,9 +420,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         <div class="col">
                             <p>
                                 <?php echo $periodoQuincenaAnterior ." ". $periodoNominaAnteri  ?>
-                                <br><br>
-
-                                <br><br>
+                                <br><br><br>
 
                                 <div class="row">
                                     <div class="col col-sm-4"> <span>Salario Diario</span> </div>
