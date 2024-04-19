@@ -44,8 +44,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         // Manejar el caso en el que no se pudieron obtener los datos del cliente
         echo "No se pudieron obtener los datos del cliente.";
     }
-        
-    #VALIDAR NOMINA
+
+    ######################## VALIDAR NOMINA ######################## 
     $curlNomina = curl_init();
     
     curl_setopt_array($curlNomina, array(
@@ -119,7 +119,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $totalDevengado     = obtenerValorSeguro($datosNomina["Total Devengado"]);
             $pagoNeto           = obtenerValorSeguro($datosNomina["Neto a Pagar"]);
             $wolkvox_id_nom     = obtenerValorSeguro($datosNomina["wolkvox_id"]);
-
+            
+            
+            $valorHED = $datosNomina["Relacion Hr"][0]["Hr Diaria"];
+            $valorHEN = $datosNomina["Relacion Hr"][0]["Hr Diaria"];
+            $valorHEDD = $datosNomina["Relacion Hr"][0]["Hr Diaria"];
+            $valorHEDN = $datosNomina["Relacion Hr"][0]["Hr Diaria"];
             $idNomina = $datosNomina["Nombre contacto"]["value_id"];
 
             
@@ -138,27 +143,48 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     exit();
 }
 
-
-validarDosUltimos($responseNomina);
-
-
- # INICIALIZACIÓN DE VARIABLES
+    ################################# VALIDAR DATOS CLIENTE #################################
+    # INICIALIZACIÓN DE VARIABLES
+    $auxTte = 4353;
+    $desprendibleNomina = "Semanal";
     $frecuenciaPago = $valoresCliente["Frecuencia de Pago"];
     $bool_aux_tte = $valoresCliente["No Incluye Auxilio de Tte"];
     echo "incluye Auxilio de Tte: " .$bool_aux_tte. "<br/>";
-    
+
     #si el auxilio de transporte llega como false se inicializa en 0
     if ($bool_aux_tte == true ){
         $auxTte = 0;
     }else{
         $auxTte = $totalAuxTte1;
     }
-    
+
     if ($frecuenciaPago == "Mensual" ){
         $desprendibleNomina = "Mensual";
     }
-    
+
     echo "Auxilio de Tte: " .$auxTte. "<br/>";
+
+    ################################# FIN VALIDAR DATOS CLIENTE #################################
+
+# ALMACENAR EN VARIABLES EL RETURN DE LA FUNCION validarDosUltimos
+$resultUtimas2Quincenas = validarDosUltimos($responseNomina);
+$resultJson = json_encode($resultUtimas2Quincenas);
+
+$decode_Ultimos2Validados = json_decode($resultJson, false);
+
+$deducionPensionActual  = $decode_Ultimos2Validados -> Deduccion_Pension_Actual_Quincena;
+$deducionPensionAnteri  = $decode_Ultimos2Validados -> Deduccion_Pension_anterior_Quincena;
+$deducionSaludActual    = $decode_Ultimos2Validados -> Deduccion_Salud_Actual_Quincena;
+$deducionSaludAnteri    = $decode_Ultimos2Validados -> Deduccion_Salud_anterior_Quincena;
+$periodoNominaActual    = $decode_Ultimos2Validados -> Periodo_Nomina_Actual;
+$periodoNominaAnteri    = $decode_Ultimos2Validados -> Periodo_Nomina_Anterior;
+$periodoQuincenaActual  = $decode_Ultimos2Validados -> Periodo_Quincena_Actual;
+$periodoQuincenaAnterior = $decode_Ultimos2Validados -> Periodo_Quincena_Anterior;
+$diasLaboradosActual    = $decode_Ultimos2Validados -> Dias_laborados_actuales;
+$diasLaboradosAnterior  = $decode_Ultimos2Validados -> Dias_laborados_anteriores;
+$salarioxDiaAnterior    = $decode_Ultimos2Validados -> Pago_Diairio_Anterior;
+$transporteAnterior     = $decode_Ultimos2Validados -> Auxilio_TransPorte_Anterior;
+$totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
 
 
 /* ------------------------FUNCIONES PHP------------------------------- */
@@ -178,10 +204,8 @@ function obtenerValorSeguro($clave, $default = null){
     return $default;
 }
 
+
 function validarDosUltimos($jsonResp){    
-        
-    // Tu JSON completo
-    #$json = $jsonResp; // Aquí debes colocar el JSON completo
     
     // Decodificar el JSON
     $data = json_decode($jsonResp, true);
@@ -196,7 +220,6 @@ function validarDosUltimos($jsonResp){
     $deduccionPensionArray = [];
     $deduccionSaludArray = [];
     $valorHorasExtr = [];
-
 
     // Iterar sobre los últimos dos registros
     foreach ($ultimosDosRegistros as $registro) {
@@ -252,27 +275,6 @@ return  array( 'Deduccion_Pension_anterior_Quincena' => $deduccionPensionNomina2
             );
 
 }
-
-# ALMACENAR EN VARIABLES EL RETURN DE LA FUNCION validarDosUltimos
-$resultUtimas2Quincenas = validarDosUltimos($responseNomina);
-$resultJson = json_encode($resultUtimas2Quincenas);
-
-$decode_Ultimos2Validados = json_decode($resultJson, false);
-
-$deducionPensionActual = $decode_Ultimos2Validados -> Deduccion_Pension_Actual_Quincena;
-$deducionPensionAnteri = $decode_Ultimos2Validados -> Deduccion_Pension_anterior_Quincena;
-$deducionSaludActual = $decode_Ultimos2Validados -> Deduccion_Salud_Actual_Quincena;
-$deducionSaludAnteri = $decode_Ultimos2Validados -> Deduccion_Salud_anterior_Quincena;
-$periodoNominaActual = $decode_Ultimos2Validados -> Periodo_Nomina_Actual;
-$periodoNominaAnteri = $decode_Ultimos2Validados -> Periodo_Nomina_Anterior;
-$periodoQuincenaActual = $decode_Ultimos2Validados -> Periodo_Quincena_Actual;
-$periodoQuincenaAnterior = $decode_Ultimos2Validados -> Periodo_Quincena_Anterior;
-$diasLaboradosActual = $decode_Ultimos2Validados -> Dias_laborados_actuales;
-$diasLaboradosAnterior = $decode_Ultimos2Validados -> Dias_laborados_anteriores;
-$salarioxDiaAnterior = $decode_Ultimos2Validados -> Pago_Diairio_Anterior;
-$transporteAnterior = $decode_Ultimos2Validados -> Auxilio_TransPorte_Anterior;
-$totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
-
 ?>
 
 <!DOCTYPE html>
@@ -505,7 +507,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
             </div>
 
             <div class="botonImprimir">
-                <button type="submit" class="btn btn-primary mb-3">NO, Imprimir Comprobante</button>
+                <button type="submit" class="btn btn-primary mb-3" onclick="ImprimirComprobante()">NO, Imprimir Comprobante</button>
             </div>
 
             <hr>
@@ -523,7 +525,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
 
                         <div class="col">
                             <input class="form-control form-control-sm" type="number" id="salarioDiario"
-                                value="<?php print_r($salarioDiario) ?>" >
+                                value="<?php print_r($pagoDiario) ?>" >
                         </div>
 
 
@@ -580,7 +582,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         </div>
 
                         <div class="col">
-                            <input class="form-control form-control-sm" type="text" value="Valor_Cesantías"
+                            <input class="form-control form-control-sm" type="text" value="0"
                                 aria-label="readonly input">
                         </div>
 
@@ -589,7 +591,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         </div>
 
                         <div class="col">
-                            <input class="form-control form-control-sm" type="text" value="Valor_Vacaciones"
+                            <input class="form-control form-control-sm" type="text" value="0"
                                 aria-label="readonly input">
                         </div>
 
@@ -616,7 +618,7 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
                         </div>
 
                         <div class="col ">
-                            <input class="form-control form-control-sm" type="text" value="Valor_Prestamo"
+                            <input class="form-control form-control-sm" type="text" value="0"
                                 aria-label="readonly input" readonly>
                         </div>
                     </div> <!-- Fin Row -->
@@ -632,26 +634,26 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
 
                         <div class="col">
                             <label for="HED">Hora Extra Diurna</label>
-                            <input class="form-control form-control-sm" type="number" id="HED" value="" min="0"
+                            <input class="form-control form-control-sm" type="number" id="HED" value="<?php echo $valorHED ?>" min="0"
                                 aria-label="readonly input" >
                         </div>
 
                         <div class="col">
                             <label for="HDN">Hora Extra nocturna</label>
-                            <input class="form-control form-control-sm" id="HDN" type="number" value=""
+                            <input class="form-control form-control-sm" id="HEN" type="number" value="<?php echo $valorHEN ?>"
                                 min="0" aria-label="readonly input" >
                         </div>
 
                         <div class="col">
                             <label for="HEDD">Hora Extra Dom/Fest Diurna</label>
                             <input class="form-control form-control-sm" id="HEDD" type="number"
-                                value="" min="0" aria-label="readonly input" >
+                                value="<?php echo $valorHEDD ?>" min="0" aria-label="readonly input" >
                         </div>
 
                         <div class="col">
                             <label for="HEDN">Hora Extra Dom/Fest nocturna</label>
                             <input class="form-control form-control-sm" id="HEDN" type="number"
-                                value=""  min="0" aria-label="readonly input" >
+                                value="<?php echo $valorHEDN ?>"  min="0" aria-label="readonly input" >
                         </div>
                     </div><!-- Fin Row -->
                 </div> <!-- Fin fila Horas Extras -->
@@ -671,12 +673,23 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
         <form id="formulariocrm" action="updateNomina.php" method="post">
             <!-- Tus inputs y otros elementos del formulario aquí -->
             <input type="text" name="salarioxDia" id="salarioxDia" hidden>
+            <input type="text" name="reporte_hdd" id="reporte_hdd" hidden>
+            <input type="text" name="reporte_hdn" id="reporte_hdn" hidden>
+            <input type="text" name="reporte_hedd" id="reporte_hedd" hidden>
+            <input type="text" name="reporte_hedn" id="reporte_hedn" hidden>
+
             <input type="text" name="idNomina" id="idNomina" value="<?php print_r($idNomina) ?>" hidden>
-            <input type="text" name="empleador" id="empleador" value="<?php print_r($nombreEmpleadorNom); ?>" hidden>
-            <input type="text" name="IdEmpleador" id="idEmpleador" value="<?php print_r($nroDocEmpleador); ?>" hidden>
-            <input type="text" name="empleado" id="empleado" value="<?php print_r($nombreEmpleadoContactos); ?>" hidden>
-            <input type="text" name="docEmpleado" id="docEmpleado" value="<?php print_r($nroDocEmpleadoCon); ?>" hidden>
+            <input type="text" name="empleador" id="empleador" value="<?php print_r($valoresCliente["namecontact"]); ?>" hidden>
+            <input type="text" name="IdEmpleador" id="idEmpleador" value="<?php print_r($valoresCliente["ID Contacto"]); ?>" hidden> 
+            <input type="text" name="empleado" id="empleado" value="<?php print_r($valoresCliente["Nombre Empleado"]); ?>" hidden>
+            <input type="text" name="docEmpleado" id="docEmpleado" value="<?php print_r($valoresCliente["ID Empleado"]); ?>" hidden>
             <input type="text" name="wolkbox_id" id="wolkbox_Id" value="<?php print_r($wolkvox_id_nom); ?>" hidden>
+
+           <!--  <input type="text" name="reporte_hdd" id="reporte_hdd" value="<?php //($valorHED); ?>" hidden>
+            <input type="text" name="reporte_hdn" id="reporte_hdn" value="<?php //print_r($valorHEN); ?>" hidden>
+            <input type="text" name="reporte_hedd" id="reporte_hddd" value="<?php //print_r($valorHEDD); ?>" hidden>
+            <input type="text" name="reporte_hedn" id="reporte_hddn" value="<?php //print_r($valorHEDN); ?>" hidden> -->
+
 
             <?php # echo "La variable Wolbox_ID contienes el valor: "  . $wolkvox_id;?>
             
@@ -696,7 +709,6 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
             actualizarValores.removeAttribute("hidden")
         }
 
-
         function ActualizarCRM(){
 
             console.log("Se ha presionado el boton Guardar Cambios")
@@ -704,9 +716,12 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
             // Capturamos los valores de las cajas de texto y asignamoslas a variables para ser utilizadas en el POST
             // Recojo los valores de las cajas de texto y las convierto en variables js
             let salarioDiario = parseInt(document.getElementById('salarioDiario').value);
+            let valorHED = parseInt(document.getElementById('HED').value);
+            let valorHEN = parseInt(document.getElementById('HEN').value);
+            let valorHEDD = parseInt(document.getElementById('HEDD').value);
+            let valorHEDN = parseInt(document.getElementById('HEDN').value);
+            
             let idNomima = document.getElementById('idNomina').value;
-
-
             let empleador = document.getElementById('empleador').value;
             let idContacto = document.getElementById('idEmpleador').value;
             let empleado = document.getElementById('empleado').value;
@@ -718,8 +733,12 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
 
             // Pego la información en el formulario para enviarlo al servidor
             document.forms["formulariocrm"].elements["salarioxDia"].value = salarioDiario;      
-            document.forms["formulariocrm"].elements["idNomina"].value = idNomima;
+            document.forms["formulariocrm"].elements["reporte_hdd"].value = valorHED;
+            document.forms["formulariocrm"].elements["reporte_hdn"].value = valorHEN;
+            document.forms["formulariocrm"].elements["reporte_hedd"].value = valorHEDD;
+            document.forms["formulariocrm"].elements["reporte_hedn"].value = valorHEDN;
 
+            document.forms["formulariocrm"].elements["idNomina"].value = idNomima;
             document.forms["formulariocrm"].elements["wolkbox_Id"].value = wolkvox_Id; 
             document.forms["formulariocrm"].elements["empleador"].value = empleador;
             document.forms["formulariocrm"].elements["idEmpleador"].value = idContacto; //VALIDAR ERROR QUE ESTA PASANDO SOBRE ESAT VARIABLE
@@ -727,6 +746,12 @@ $totalDevengadoAnterior = $decode_Ultimos2Validados -> Total_Devengado_Anterior;
             document.forms["formulariocrm"].elements["docEmpleado"].value = docEmpleado;
 
             document.forms["formulariocrm"].submit();
+
+        }
+
+        function ImprimirComprobante() {
+            console.log("Se ha presionado el boton Imprimir Comprobante")
+            window.location.href = 'https://unifika.co/wp-content/forms/generarpdf/imprimir.php?idcliente=<?php echo $cedula ?>'
 
         }
     </script> 
