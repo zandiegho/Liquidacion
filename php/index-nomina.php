@@ -334,32 +334,31 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 
                 function insertNomina(cedula){
-                    //create form to redirect to insertNomina.php
-                    // Create a new form element
+                    // Crea elemento form
                     var form = document.createElement('form');
 
-                    // Set the form's action attribute to insertNomina.php
+                    // dar el action al elemento form
                     form.action = 'crear-nomina.php';
 
-                    // Set the form's method attribute to POST
+                    // dar el mentodo GET al elemento form
                     form.method = 'GET';
 
-                    // Create a new input element for the cedulaEmpleador
+                    // Crear el elemento input donde vamos a pasar el valor de cedulaEmpleador
                     var inputCedula = document.createElement('input');
                     inputCedula.type = 'hidden';
                     inputCedula.name = 'cedulaEmpleador';
-                    inputCedula.value = cedula;
+                    inputCedula.value = cedula;  // --> Valor de parametro
 
-                    // Append the input element to the form
+                    //Asignamos el elemento input al form
                     form.appendChild(inputCedula);
 
-                    // Append the form to the body of the document
+                    // Asignamos el elemento form al body
                     document.body.appendChild(form);
 
-                    // Submit the form
+                    // Enviamos el form
                     form.submit();
 
-                    // Remove the form from the document
+                    //Removemos el form del body depues de enviado
                     document.body.removeChild(form);
                             
                 }
