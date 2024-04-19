@@ -534,7 +534,7 @@ return  array( 'Deduccion_Pension_anterior_Quincena' => $deduccionPensionNomina2
                         </div>
 
                         <div class="col">
-                            <input class="form-control form-control-sm" type="text"
+                            <input class="form-control form-control-sm" type="number" id="dias_Laborados"
                                 value="<?php print_r($diasLaborados) ?>" >
                         </div>
 
@@ -677,6 +677,8 @@ return  array( 'Deduccion_Pension_anterior_Quincena' => $deduccionPensionNomina2
             <input type="text" name="reporte_hdn" id="reporte_hdn" hidden>
             <input type="text" name="reporte_hedd" id="reporte_hedd" hidden>
             <input type="text" name="reporte_hedn" id="reporte_hedn" hidden>
+            <input type="text" name="diasLaborados" id="diasLaborados" hidden>
+
 
             <input type="text" name="idNomina" id="idNomina" value="<?php print_r($idNomina) ?>" hidden>
             <input type="text" name="empleador" id="empleador" value="<?php print_r($valoresCliente["namecontact"]); ?>" hidden>
@@ -716,6 +718,7 @@ return  array( 'Deduccion_Pension_anterior_Quincena' => $deduccionPensionNomina2
             // Capturamos los valores de las cajas de texto y asignamoslas a variables para ser utilizadas en el POST
             // Recojo los valores de las cajas de texto y las convierto en variables js
             let salarioDiario = parseInt(document.getElementById('salarioDiario').value);
+            let diasLaborados = parseInt(document.getElementById('dias_Laborados').value)
             let valorHED = parseInt(document.getElementById('HED').value);
             let valorHEN = parseInt(document.getElementById('HEN').value);
             let valorHEDD = parseInt(document.getElementById('HEDD').value);
@@ -744,6 +747,8 @@ return  array( 'Deduccion_Pension_anterior_Quincena' => $deduccionPensionNomina2
             document.forms["formulariocrm"].elements["idEmpleador"].value = idContacto; //VALIDAR ERROR QUE ESTA PASANDO SOBRE ESAT VARIABLE
             document.forms["formulariocrm"].elements["empleado"].value = empleado;
             document.forms["formulariocrm"].elements["docEmpleado"].value = docEmpleado;
+
+            document.forms["formulariocrm"].elements["diasLaborados"].value = diasLaborados;
 
             document.forms["formulariocrm"].submit();
 

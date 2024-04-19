@@ -17,7 +17,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             // Hacer algo con la variable, como sanitizarla o utilizarla
             echo "La variable $key está definida y no es nula. Valor: $value<br>";
             $nuevoSalarioDia = $_POST['salarioxDia'];
-            //$diasTrabajados = $_POST["diasLaborados"];
+            $diasTrabajados = $_POST["diasLaborados"];
             $idNomina = $_POST["idNomina"];
             $name = $_POST["empleador"];
             $idcliente = $_POST["IdEmpleador"];
@@ -46,7 +46,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
          * Bonificación *si aplica
          * */
 
-         //$totalDevegado = $nuevoSalarioDia * $diasTrabajados;
+         $totalDevegado = $nuevoSalarioDia * $diasTrabajados;
         ############################### FIN OPERACIONES ###############################
 
         # INICIO CURL INIT
@@ -67,11 +67,18 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 "module": "Nomina",
                 "wolkvox-id": "'.$wolkbox_id.'",
                 "fields": {
+                    "Dias Laborados": '.$diasTrabajados.',
                     "Salario por dia": {
                         "type": "currency",
                         "value": "'.$nuevoSalarioDia.'",
                         "symbol": "COP",
                         "convert": '.$nuevoSalarioDia.'
+                    },
+                    "Total Devengado": {
+                        "type": "currency",
+                        "value": "'.$totalDevegado.'",
+                        "symbol": "COP",
+                        "convert": '.$totalDevegado.'
                     },
                     "Relacion Hr": {
                         "type": "table",
