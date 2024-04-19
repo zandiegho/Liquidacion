@@ -219,7 +219,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             </div><!-- fin col -->
                             
                             <div class="col-3 text-center">
-                                <input type="button" class="btn btn-primary" id="btn-insertar" value="Insertar Nomina" onclick="insertNomina()" disabled>
+                                <input type="button" class="btn btn-primary" id="btn-insertar" value="Insertar Nomina" onclick="insertNomina(<?php echo $docEmpleador ?>)" disabled>
                             </div><!-- fin col -->
                             
                             <div class="col-3 text-center">
@@ -332,8 +332,36 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 }
 
-                function insertNomina(){
-                    //llevar a Insertar Nomina
+                
+                function insertNomina(cedula){
+                    //create form to redirect to insertNomina.php
+                    // Create a new form element
+                    var form = document.createElement('form');
+
+                    // Set the form's action attribute to insertNomina.php
+                    form.action = 'crear-nomina.php';
+
+                    // Set the form's method attribute to POST
+                    form.method = 'GET';
+
+                    // Create a new input element for the cedulaEmpleador
+                    var inputCedula = document.createElement('input');
+                    inputCedula.type = 'hidden';
+                    inputCedula.name = 'cedulaEmpleador';
+                    inputCedula.value = cedula;
+
+                    // Append the input element to the form
+                    form.appendChild(inputCedula);
+
+                    // Append the form to the body of the document
+                    document.body.appendChild(form);
+
+                    // Submit the form
+                    form.submit();
+
+                    // Remove the form from the document
+                    document.body.removeChild(form);
+                            
                 }
 
                 function updateNomina(){

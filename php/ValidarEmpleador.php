@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if($periodoQuincena == "Segunda"){
             validarDosUltimos($responseNomina, $cedula);
         }
-         else{
+        else{
             
             echo '<form id="redirectForm" action="../index-nomina.php" method="post">';
             echo '<input type="hidden" name="cedulaEmpleador" value="'.$cedula.'">';               
