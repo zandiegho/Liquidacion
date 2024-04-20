@@ -15,7 +15,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         // Verificar si la variable está definida y no es nula
         if (isset($value)) {
             // Hacer algo con la variable, como sanitizarla o utilizarla
-            echo "La variable $key está definida y no es nula. Valor: $value<br>";
+            //echo "La variable $key está definida y no es nula. Valor: $value<br>";
             $nuevoSalarioDia = $_POST['salarioxDia'];
             $diasTrabajados = $_POST["diasLaborados"];
             $idNomina = $_POST["idNomina"];
@@ -105,7 +105,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $responseUpdate = curl_exec($curlUpdateNomina);
         
         curl_close($curlUpdateNomina);
-        echo $responseUpdate;
+        //echo $responseUpdate;
     }
 }
 

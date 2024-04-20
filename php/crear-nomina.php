@@ -1,83 +1,87 @@
 <?php
 
-
+include 'curl_functions.php';
 
 if(isset($_GET["cedulaEmpleador"])){
     $cedula =  $_GET['cedulaEmpleador']; 
 
+    //Obtenemos los valores del cliente 
+    
+    //DECLARAMOS LAS VARIABLES CONSTANTES
     $SMLVM = 1300000; //constante Salario Minimo
     $SMLVD = $SMLVM / 30; //constante Salario Minimo Diario
     $AUX_TTE = 162000; // Constante Valor Aux Tte Legal
     $AUX_TTE_DIA = $AUX_TTE/30; // Constante Valor Auxilio de Tte por día 
-
-    $curlCliente = curl_init();
-
-    curl_setopt_array($curlCliente, array(
-        CURLOPT_URL => 'https://crm.wolkvox.com/server/API/v2/custom/query.php',
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_POSTFIELDS =>'{
-            "operation":"techcon",
-            "wolkvox-token":"7b74656368636f6e7d2d7b32303232303632343132323830357d",
-            "module":"contacts",
-            "field":"ID Contacto",
-            "value": '.$cedula.'
-        }',
-        CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json',
-            'Cookie: PHPSESSID=03jeh67ajirv2ha35og473ca8a'
-        ),
-    ));
-
-    $responseCliente = curl_exec($curlCliente);
-
-    curl_close($curlCliente);
-
-    //decodificar la respuesta del Curl CLIENTE en JSON
-    $responseClienteJson = json_decode($responseCliente, false);
     
-    # SI EL CLIENTE EXISTE
-    if($responseClienteJson -> msg == "1 records were are found"){
+    $datosClienteArray = ObtenerDatosCliente($cedula);
+
+    //VALIDAMOS DATOS QUE EXISTAN
+    // Verificas si la decodificación fue exitosa y si el nombre del cliente está presente en los datos
+    if ($datosClienteArray) {
+            
+        // Array con los nombres de los campos que deseas obtener
+        $camposDeseados = array('namecontact', 'ID Contacto', 'Ciudad', 'Nombre Empleado', 'ID Empleado', 'Condicion Laboral' , 'Tipo de Labor' );
         
-        /*decodificamos el json en matriz con parametro true*/
-        $decode_jsonT = json_decode($responseCliente, true);
-        $data = $decode_jsonT['data'];
+        // Array para almacenar los valores obtenidos
+        $valoresCliente = array();
         
-        /* Accedemos al array DATA */
-        foreach($data as $datos){
-
-            # Capturamos Wolkbox_ID
-            $wolkvox_id = $datos["wolkvox_id"];
-            
-            # DATOS EMPLEADOR
-            $nombreEmpleador    = $datos["namecontact"];
-            $tipoDocEmpleador   = $datos["Tipo ID Contacto"];
-            $nroDocEmpleador    = $datos["ID Contacto"];
-
-            # DATOS EMPLEADO
-            $nombreEmpleado     = $datos["Nombre Empleado"];
-            $tipoDocEmpleado    = $datos["Tipo ID"];
-            $nroDocEmpleado     = $datos["ID Empleado"];
-            $inicioContrato     = $datos["Fecha Inicio"];
-            
-            # AUX DE TTE
-            $bool_aux_tte       =$datos["No Incluye Auxilio de Tte"];       
-            
-            # DATOS NOMIMA
-            $frecuenciaPago     =$datos["Frecuencia de Pago"];
-            $tipoContrato       =$datos["Tipo de Contrato"];
-            $salarioDiario      =$datos["Salario por dia"]["value"];
-            $tipoLaborContactos =$datos["Tipo de Labor"];
-
-            $idwolkvox          =$datos["wolkvox_id"];
-        }       
+        // Iteras sobre cada campo deseado y obtienes su valor del array de datos del cliente
+        foreach ($camposDeseados as $campo) {
+            // Verificas si el campo existe en los datos del cliente y lo agregas al array de valores
+            if (isset($datosClienteArray['data'][0][$campo])) {
+                $valoresCliente[$campo] = $datosClienteArray['data'][0][$campo];
+            } else {
+                // Si el campo no existe, puedes asignar un valor predeterminado o dejarlo en blanco
+                $valoresCliente[$campo] = 'No disponible';
+            }
+        }
+        
+        // Ahora $valoresCliente contiene todos los valores que necesitas del cliente
+        // Puedes acceder a cada valor utilizando su nombre de campo como clave en el array
+        foreach ($valoresCliente as $campo => $valor) {
+            echo ucfirst($campo) . ": " . $valor . "<br>"; // ucfirst() para capitalizar el nombre del campo
+        }
+    } else {
+        // Manejar el caso en el que no se pudieron obtener los datos del cliente
+        echo "No se pudieron obtener los datos del cliente.";
     }
-    //echo $cedula;
+
+    /* ============================================================================================================================== */
+   
+    //Obtenemos los valores de la nomina 
+    $datosNominaArray = obtenerDatosNomina($cedula);
+
+     //VALIDAMOS DATOS QUE EXISTAN
+    // Verificas si la decodificación fue exitosa y si el nombre del cliente está presente en los datos
+    if ($datosNominaArray) {
+            
+        // Array con los nombres de los campos que deseas obtener
+        $camposDeseadosNom = array('Nombre Empleado', 'ID Empleado', 'Tipo de Labor', 'Base Minimo', 'Dias Laborados', 'Salario por dia' , 'Aux Transporte' , 'Bono Diario' );
+        
+        // Array para almacenar los valores obtenidos
+        $valoresNomina = array();
+        
+        // Iteras sobre cada campo deseado y obtienes su valor del array de datos del cliente
+        foreach ($camposDeseadosNom as $campo) {
+            // Verificas si el campo existe en los datos del cliente y lo agregas al array de valores
+            if (isset($datosNominaArray['data'][0][$campo])) {
+                $valoresNomina[$campo] = $datosNominaArray['data'][0][$campo];
+            } else {
+                // Si el campo no existe, puedes asignar un valor predeterminado o dejarlo en blanco
+                $valoresNomina[$campo] = 'No disponible';
+            }
+        }
+        
+        // Ahora $valoresCliente contiene todos los valores que necesitas del cliente
+        // Puedes acceder a cada valor utilizando su nombre de campo como clave en el array
+        foreach ($valoresNomina as $campo => $valor) {
+            //echo ucfirst($campo) . ": " . $valor . "<br>"; // ucfirst() para capitalizar el nombre del campo
+        }
+    } else {
+        // Manejar el caso en el que no se pudieron obtener los datos del cliente
+        echo "No se pudieron obtener los datos del cliente.";
+    }
+
 ?>
 
 <!-- ============================================================================= -->
@@ -99,12 +103,12 @@ if(isset($_GET["cedulaEmpleador"])){
                     <div class="row">
                         <div class="col col-md-6">
                             <Label for="cliente" class="col-sm-2 col-form-label">Cliente</Label>
-                            <input type="text" class="form-control" name="empleador" id="cliente" value="<?php print($nombreEmpleador)?>" aria-label="readonly input example" readonly>  
+                            <input type="text" class="form-control" name="empleador" id="cliente" value="<?php print($valoresCliente["namecontact"])?>" aria-label="readonly input example" readonly>  
                         </div><!-- Fin Col -->
 
                         <div class="col col-md-6">
                             <Label for="idCliente" class="col-sm-2 col-form-label">ID Cliente</Label>
-                            <input type="text" class="form-control" name="idEmpleador" id="idCliente" value="<?php print($nroDocEmpleador)?>" aria-label="readonly input example" readonly>  
+                            <input type="text" class="form-control" name="idEmpleador" id="idCliente" value="<?php print($valoresCliente["ID Contacto"])?>" aria-label="readonly input example" readonly>  
                         </div><!-- Fin Col -->  
                     </div><!-- Fin row -->
 
@@ -115,17 +119,17 @@ if(isset($_GET["cedulaEmpleador"])){
                     <div class="row">
                         <div class="col col-md-4">
                             <Label for="empleado" class="col-sm-2 col-form-label">Empleado</Label>
-                            <input type="text" class="form-control" name="empleado" id="cliente" value="<?php print($nombreEmpleado)?>" aria-label="readonly input example" readonly>  
+                            <input type="text" class="form-control" name="empleado" id="cliente" value="<?php print($valoresNomina["Nombre Empleado"]["value"])?>" aria-label="readonly input example" readonly>  
                         </div><!-- Fin Col -->
 
                         <div class="col col-md-4">
                             <Label for="idEmpleado" class="col-sm-4 col-form-label">ID Empleado</Label>
-                            <input type="text" class="form-control" name="idEmpleado" id="idEmpleado" value="<?php print($nroDocEmpleado)?>" aria-label="readonly input example" readonly>  
+                            <input type="text" class="form-control" name="idEmpleado" id="idEmpleado" value="<?php print($valoresNomina["ID Empleado"]["value"])?>" aria-label="readonly input example" readonly>  
                         </div><!-- Fin Col -->  
 
                         <div class="col col-md-4">
                             <Label for="tipoLabor" class="col-sm-4 col-form-label">Tipo Labor</Label>
-                            <input type="text" class="form-control" name="tipoLabor" id="tipoLabor" value="<?php print($tipoLaborContactos)?>" aria-label="readonly input example" readonly>  
+                            <input type="text" class="form-control" name="tipoLabor" id="tipoLabor" value="<?php print($valoresNomina["Tipo de Labor"])?>" aria-label="readonly input example" readonly>  
                         </div><!-- Fin Col -->  
                     </div><!-- Fin row -->
 
@@ -164,24 +168,34 @@ if(isset($_GET["cedulaEmpleador"])){
                     <div class="row">
                         <div class="col col-md-3">
                             <Label for="input-diasLab" class="col-sm-3 col-form-label">Dias Laborados</Label>
-                            <input type="number" class="form-control" name="diaLab" id="input-diasLab" min="1" max="16" step="1">  
+                            <input type="number" class="form-control input" name="diaLab" id="input-diasLab" min="1" max="16" step="1" value="<?php print($valoresNomina["Dias Laborados"]) ?>">  
                         </div><!-- Fin Col -->
 
                         <div class="col col-md-3">
                             <label for="inp-salarioDia" class="col-sm-3 col-form-label">Salario por dia</label>
-                            <input type="number" class="form-control" name="salarioxDia" id="inp-salarioDia" min="43353" value="<?php print($salarioDiario) ?>" >  
+                            <input type="number" class="form-control input" name="salarioxDia" id="inp-salarioDia" min="43353" value="<?php print($valoresNomina["Salario por dia"]["value"]) ?>" >  
                         </div><!-- Fin Col -->  
 
                         <div class="col col-md-3">
                             <Label for="inp-auxTte" class="col-sm-3 col-form-label">Auxilio de Tte dia</Label>
-                            <input type="number" class="form-control" name="auxTteNeto" id="inp-auxTte" min="0" value="0">  
+                            <input type="number" class="form-control input" name="auxTteNeto" id="inp-auxTte" min="0" value="<?php print($valoresNomina["Aux Transporte"]["convert"] / $valoresNomina["Dias Laborados"]) ?>">  
                         </div><!-- Fin Col -->  
 
                         <div class="col col-md-3">
                             <Label for="inp-bono" class="col-sm-3 col-form-label">Bono Diario</Label>
-                            <input type="number" class="form-control" name="bonoBase" id="inp-bono" min="0" value="0">  
+                            <input type="number" class="form-control input" name="bonoBase" id="inp-bono" min="0" value="<?php print($valoresNomina["Bono Diario"]["value"]) ?>">  
                         </div><!-- Fin Col -->  
                     </div><!-- Fin row -->
+
+                    <br>
+                    <div class="row">
+                        <div class="col">
+                            <label for="Total Devengado">Total Devengado</label>
+                        </div>
+                        <div class="col">
+                            <input type="number" name="totalDevengado" id="totalDevengado" aria-readonly="ReadAonly" readonly >
+                        </div>
+                    </div>
 
                     <hr>
                     <!-- =============================================================================== -->
@@ -223,6 +237,35 @@ if(isset($_GET["cedulaEmpleador"])){
         <!-- Script boostrap -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+        </script>
+
+        <script>
+            const inpSalarioDia = document.getElementById('inp-salarioDia')
+            const inpDiasLaborados = document.getElementById('input-diasLab')
+            const inpAuxtte = document.getElementById('inp-auxTte')
+            const inpBoniDiario = document.getElementById('inp-bono')
+            const inpTotalDevengado = document.getElementById('totalDevengado')
+
+            function Calculartotal() {
+                const salario = parseFloat(inpSalarioDia.value) || 0;
+                const dias = parseFloat(inpDiasLaborados.value) || 0;
+                const aux = parseFloat(inpAuxtte.value) || 0;
+                const bono = parseFloat(inpBoniDiario.value) || 0;
+
+                const total = salario * dias + aux + bono;
+
+                // Actualizar el valor del input de total devengado
+                inpTotalDevengado.value = total;
+            }
+
+            // Agregar un event listener a cada input para llamar a la función calcularTotal cuando cambie
+            document.querySelectorAll('.input').forEach(input => {
+                input.addEventListener('change', Calculartotal);
+            });
+
+            // Calcular el total inicial al cargar la página
+            Calculartotal();
+
         </script>
     </body>
     </html>
